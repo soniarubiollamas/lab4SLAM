@@ -125,10 +125,14 @@ void LocalMapping::triangulateNewMapPoints() {
                 triangulate(xn1, xn2, T1w, T2w, x3D);
 
                 // Check if triangulation passes quality tests:
+                // Transform the 3D point into both camera coordinate systems
+                Eigen::Vector3f coord_cam1 = T1w * x3D;
+                Eigen::Vector3f coord_cam2 = T2w * x3D;
 
-                // 1. Check if the point is in front of both cameras
-                if (x3D.z() < 0 || pKF->getPose().inverse() * x3D ).z() < 0) 
-                    continue; 
+                // Check if the point is in front of both cameras
+                if (!((coord_cam1(2) > 0.0f) && (coord_cam2(2) > 0.0f))) {
+                    continue; // Skip to the next potential match
+                }
 
                 // 2. Check parallax (reject points with poor triangulation angle)
                 float parallax = cosRayParallax(xn1, xn2);
@@ -136,14 +140,22 @@ void LocalMapping::triangulateNewMapPoints() {
                     continue;
 
                 // 3. Check reprojection error in both frames
-                float reprojError1 = squaredReprojectionError(kp1.pt, calib1->project(x3D));
-                float reprojError2 = squaredReprojectionError(kp2.pt, calib2->project(x3D));
-                if (reprojError1 > maxReprojError || reprojError2 > maxReprojError) 
-                    continue;
+
+                // Calculate the reprojection of the 3D point in the current KeyFrame 
+                cv::Point2f uv1 = calibration1->project(x3D);  
+
+                // Get the corresponding keypoint coordinates
+                cv::Point2f uv2 = currKeyFrame_->getKeyPoint(i).pt; 
+
+                // Check the reprojection error
+                if (squaredReprojectionError(uv2, uv1) <= 5.991) { // Check if within threshold
+                    continue; // Skip to the next potential match
+                }
 
                 // All quality checks passed! Create the MapPoint:
-                shared_ptr<MapPoint> pNewMP = make_shared<MapPoint>(x3D, currKeyFrame_.get());
+                shared_ptr<MapPoint> pNewMP = std::make_shared<MapPoint>(x3D);
                 pMap_->insertMapPoint(pNewMP);
+                nTriangulated++;
 
                 // Add observations in both KeyFrames
                 pMap_->addObservation(currKeyFrame_->getId(), pNewMP->getId(), i);

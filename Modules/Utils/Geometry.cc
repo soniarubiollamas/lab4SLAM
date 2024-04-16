@@ -57,7 +57,7 @@ float squaredReprojectionError(cv::Point2f &p1, cv::Point2f &p2){
 }
 
 Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12){
-    EEigen::Matrix<float,3,3> E;
+    Eigen::Matrix<float,3,3> E;
 
     // Extract Rotation matrix and translation vector from the pose
     Eigen::Matrix<float, 3, 3> R = T12.rotationMatrix();
