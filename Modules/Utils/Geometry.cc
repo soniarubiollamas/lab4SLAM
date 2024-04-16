@@ -76,3 +76,4 @@ Eigen::Matrix<float,3,3> computeEssentialMatrixFromPose(Sophus::SE3f& T12){
     E = t_x * R;
 
     return E;
+}
