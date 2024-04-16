@@ -357,10 +357,17 @@ bool Tracking::needNewKeyFrame() {
     /*
      * Your code for Lab 4 - Task 1 here!
      */
-    check if number of matches in that keyframe is less than 30
     
-    if(nFeatTracked_ < 30){
-        return true;
+    
+    // Check tracked features:
+    if (nFeatTracked_ < 50) {
+        return true; // Not enough features being tracked
+    }
+
+    // Check the number of frames since the last KeyFrame:
+    nFramesFromLastKF_++;
+    if (nFramesFromLastKF_ >= 30) {
+        return true; // Insert KeyFrames regularly for map consistency
     }
 
     return false;
