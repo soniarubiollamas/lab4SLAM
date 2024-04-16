@@ -107,48 +107,45 @@ void LocalMapping::triangulateNewMapPoints() {
                  * Your code for Lab 4 - Task 2 here!
                  * Note that the last KeyFrame inserted is stored at this->currKeyFrame_
                  */
+
                 // Get keypoints and normalized directions
-                
-                // Keypoint from current frame
-                const cv::KeyPoint &kp1 = currKeyFrame_->getKeyPoint(i); 
+                const cv::KeyPoint &kp1 = currKeyFrame_->getKeyPoint(i); // gets a keypoint from the current keyframe
+                const cv::KeyPoint &kp2 = pKF->getKeyPoint(vMatches[i]); // gets a corresponding keypoint from the other keyframe (pKF)
 
-                // Matched keypoint from covisible frame
-                const cv::KeyPoint &kp2 = pKF->getKeyPoint(vMatches[i]);
-
-                // Retrieve camera models
+                // Get camera models
                 shared_ptr<CameraModel> calib1 = currKeyFrame_->getCalibration(); 
                 shared_ptr<CameraModel> calib2 = pKF->getCalibration();
 
                 // Unproject keypoints (normalize bearing vectors)
-                Eigen::Vector3f xn1 = calib1->unproject(kp1.pt); 
-                Eigen::Vector3f xn2 = calib2->unproject(kp2.pt); 
+                Eigen::Vector3f xn1 = calib1->unproject(kp1.pt).normalized(); 
+                Eigen::Vector3f xn2 = calib2->unproject(kp2.pt).normalized(); 
 
                 // Triangulate 3D point 
                 Eigen::Vector3f x3D;
                 triangulate(xn1, xn2, T1w, T2w, x3D);
 
-                // Check if triangulation is in front of both cameras
+                // Check if triangulation passes quality tests:
+
+                // 1. Check if the point is in front of both cameras
                 if (x3D.z() < 0 || pKF->getPose().inverse() * x3D ).z() < 0) 
                     continue; 
 
-                // Check parallax (reject points with poor triangulation angle)
+                // 2. Check parallax (reject points with poor triangulation angle)
                 float parallax = cosRayParallax(xn1, xn2);
-                // Parallax check (reject points with poor triangulation angle)
-                float parallax = cosRayParallax(xn1, xn2);
-                if (parallax < parallaxThreshold) 
+                if (parallax < 1.5) // 1.5 rad = 86 degrees
                     continue;
-                
 
-                /// Check reprojection error in both frames
+                // 3. Check reprojection error in both frames
                 float reprojError1 = squaredReprojectionError(kp1.pt, calib1->project(x3D));
                 float reprojError2 = squaredReprojectionError(kp2.pt, calib2->project(x3D));
                 if (reprojError1 > maxReprojError || reprojError2 > maxReprojError) 
                     continue;
-                // Create a new MapPoint and insert it into the map
+
+                // All quality checks passed! Create the MapPoint:
                 shared_ptr<MapPoint> pNewMP = make_shared<MapPoint>(x3D, currKeyFrame_.get());
                 pMap_->insertMapPoint(pNewMP);
 
-                // Add observations of the new MapPoint in both KeyFrames
+                // Add observations in both KeyFrames
                 pMap_->addObservation(currKeyFrame_->getId(), pNewMP->getId(), i);
                 pMap_->addObservation(pKF->getId(), pNewMP->getId(), vMatches[i]);
             }
