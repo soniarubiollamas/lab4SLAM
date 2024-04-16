@@ -338,7 +338,7 @@ int fuse(std::shared_ptr<KeyFrame> pKF, int th, std::vector<std::shared_ptr<MapP
 
         shared_ptr<MapPoint> pMP = vMapPoints[i];
 
-        if(!pMP)
+        if(!pMP) 
             continue;
 
         if(pMap->getNumberOfObservations(pMP->getId()) == 0)
@@ -351,6 +351,28 @@ int fuse(std::shared_ptr<KeyFrame> pKF, int th, std::vector<std::shared_ptr<MapP
         /*
          * Your code for Lab 4 - Task 3 here!
          */
+
+        // Example: Calculate a search radius factor (adjust as needed)
+        // float windowSizeFactor = 2.0; // Adjust the factor as required 
+
+        // // 1. Guided Matching
+        // int bestMatchIdx = guidedMatching(*pKF, *pMP, th, windowSizeFactor);
+        // if (bestMatchIdx >= 0) {
+        //     // 2. MapPoint Match Found
+        //     std::shared_ptr<MapPoint> pMPfound = pKF->getMapPoint(bestMatchIdx);
+
+        //     if (pMPfound) {
+        //         // 3. Fuse MapPoints
+        //         pMap->fuseMapPoints(pMP->getId(), pMPfound->getId());
+
+        //         // 4. Remove Observation
+        //         pMap->removeObservation(pKF->getId(), pMPfound->getId());
+
+        //         // 5. Add New Observation
+        //         pMap->addObservation(pKF->getId(), pMP->getId(), bestMatchIdx);
+        //         nFused++; 
+        //     } 
+        // } 
     }
 
     return nFused;

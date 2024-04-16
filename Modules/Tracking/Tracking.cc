@@ -353,21 +353,50 @@ bool Tracking::trackLocalMap() {
     return nFeatTracked_ >= 20;
 }
 
-bool Tracking::needNewKeyFrame() {
+// bool Tracking::needNewKeyFrame() {
     /*
      * Your code for Lab 4 - Task 1 here!
      */
     
     
     // Check tracked features:
-    if (nFeatTracked_ < 50) {
-        return true; // Not enough features being tracked
+    // if (nFeatTracked_ < 50) {
+    //     return true; // Not enough features being tracked
+    // }
+
+    // // Check the number of frames since the last KeyFrame:
+    // nFramesFromLastKF_++;
+    // if (nFramesFromLastKF_ >= 30) {
+    //     return true; // Insert KeyFrames regularly for map consistency
+    // }
+
+    // GEORGI
+bool Tracking::needNewKeyFrame() {
+    /*
+     * Your code for Lab 4 - Task 1 here!
+     */
+
+    
+    // If our tracking is idle (inactive)
+    // Already implemented
+    // If our tracking is weak
+    if (nFeatTracked_ < 150){
+        cout<<"New Keyframe"<<endl;
+        return true;
+    }
+    nFramesFromLastKF_ = nFramesFromLastKF_+ 1;
+    if (nFramesFromLastKF_ == 15){
+        cout<<"New Keyframe"<<endl;
+        nFramesFromLastKF_ = 0;
+        return true;
     }
 
-    // Check the number of frames since the last KeyFrame:
-    nFramesFromLastKF_++;
-    if (nFramesFromLastKF_ >= 30) {
-        return true; // Insert KeyFrames regularly for map consistency
+    // If more than N frames pass since last keyframe
+    int N_min_Frames = 5;
+    nFramesFromLastKF_= nFramesFromLastKF_ +1;
+    if (nFramesFromLastKF_ > N_min_Frames){
+        cout<<"New Keyframe"<<endl;
+        return true;
     }
 
     return false;
